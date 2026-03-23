@@ -853,7 +853,7 @@ const DEMO_ARREDATORI = [
   { nome:'Francesca', cognome:'Puoti', negozio:'', telefono:'', email:'' },
   { nome:'Rossella', cognome:'Cinquegrana', negozio:'', telefono:'', email:'' },
   { nome:'Bruno', cognome:'Barrella', negozio:'', telefono:'', email:'' },
-  { nome:'Antonella', cognome:'D'Isa', negozio:'', telefono:'', email:'' },
+  { nome:'Antonella', cognome:"D'Isa", negozio:'', telefono:'', email:'' },
   { nome:'Pietro', cognome:'Cerreto', negozio:'', telefono:'', email:'' },
   { nome:'Ciro', cognome:'Carfora', negozio:'', telefono:'', email:'' },
   { nome:'Annalisa', cognome:'Severino', negozio:'', telefono:'', email:'' },
@@ -1066,27 +1066,4 @@ function loadData() {
       r.c.forEach((cell, i) => { obj[cols[i]] = cell ? cell.v : ''; });
       return obj;
     }).filter(r => r['Visibile al Cliente'] === 'SI');
-    renderCommissioni(allCommissioni);
-
-    const urlArr = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${ARREDATORI_SHEET}`;
-    const resArr = await fetch(urlArr);
-    const textArr = await resArr.text();
-    const jsonArr = JSON.parse(textArr.substring(47).slice(0,-2));
-    const colsArr = jsonArr.table.cols.map(c => c.label);
-    const arredatori = jsonArr.table.rows.map(r => {
-      const obj = {};
-      r.c.forEach((cell, i) => { obj[colsArr[i]] = cell ? cell.v : ''; });
-      return obj;
-    });
-    renderArredatori(arredatori);
-  } catch(e) {
-    console.error(e);
-    renderArredatori(DEMO_ARREDATORI);
-  }
-  */
-}
-
-document.addEventListener('DOMContentLoaded', loadData);
-</script>
-</body>
-</html>
+   
