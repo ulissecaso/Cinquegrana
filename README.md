@@ -1,4 +1,4 @@
-# Cinquegrana<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -632,11 +632,11 @@ body {
       </div>
       <div class="contatti-arrow">›</div>
     </a>
-    <a class="contatti-row" href="/cdn-cgi/l/email-protection#1f7e6c6c766c6b7a71657e5f7c76716e6a7a786d7e717e31766b">
+    <a class="contatti-row" href="mailto:assistenza@cinquegrana.it">
       <div class="contatti-icon icon-mail">✉️</div>
       <div class="contatti-info">
         <div class="contatti-label">Email</div>
-        <div class="contatti-value"><span class="__cf_email__" data-cfemail="e58496968c9691808b9f84a5868c8b9490808297848b84cb8c91">[email&#160;protected]</span></div>
+        <div class="contatti-value">assistenza@cinquegrana.it</div>
       </div>
       <div class="contatti-arrow">›</div>
     </a>
@@ -776,11 +776,11 @@ body {
       </div>
       <div class="contatti-arrow">›</div>
     </a>
-    <a class="contatti-row" href="/cdn-cgi/l/email-protection#1c75727a735c7f75726d69797b6e7d727d327568">
+    <a class="contatti-row" href="mailto:info@cinquegrana.it">
       <div class="contatti-icon icon-mail">✉️</div>
       <div class="contatti-info">
         <div class="contatti-label">Email</div>
-        <div class="contatti-value"><span class="__cf_email__" data-cfemail="b0d9ded6dff0d3d9dec1c5d5d7c2d1ded19ed9c4">[email&#160;protected]</span></div>
+        <div class="contatti-value">info@cinquegrana.it</div>
       </div>
       <div class="contatti-arrow">›</div>
     </a>
@@ -815,7 +815,7 @@ body {
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ── CONFIGURAZIONE ──
 // IMPORTANTE: sostituisci SHEET_ID con l'ID del tuo Google Sheet
 // e assicurati che il foglio sia condiviso pubblicamente in lettura
