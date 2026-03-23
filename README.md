@@ -572,15 +572,34 @@ body {
 
 <!-- 1. COMMISSIONI -->
 <div class="page active" id="page-commissioni">
-  <div class="section-title">Le tue commissioni</div>
-  <div class="section-subtitle">Aggiornate in tempo reale</div>
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" id="search-input" type="text" placeholder="Cerca per nome o numero commissione…" oninput="filterCommissioni()">
+
+  <!-- SCHERMATA LOGIN -->
+  <div id="login-box">
+    <div class="section-title">Le tue commissioni</div>
+    <div class="section-subtitle">Inserisci il tuo codice per accedere</div>
+    <div class="about-card" style="margin-top:8px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Codice sito</label>
+        <input class="form-input" id="codice-input" type="text" placeholder="es. 4935Ill" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div id="login-error" style="display:none;color:#991b1b;font-size:13px;margin-top:8px;">Codice non trovato. Controlla e riprova.</div>
+      </div>
+      <button class="form-submit" style="margin-top:16px" onclick="accediConCodice()">Accedi</button>
+    </div>
+    <div style="margin-top:16px;background:var(--gray-light);border-radius:var(--radius);padding:14px;font-size:12px;color:var(--gray);line-height:1.6;">
+      Il codice sito ti e stato fornito dal tuo arredatore. E composto da un numero seguito da alcune lettere, es. 4935Ill
+    </div>
   </div>
-  <div id="commissioni-list">
-    <div class="loading"><div class="spinner"></div>Caricamento…</div>
+
+  <!-- SCHERMATA RISULTATI -->
+  <div id="risultati-box" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <button onclick="tornaLogin()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:0;color:var(--gray)">&#8592;</button>
+      <div class="section-title" style="margin-bottom:0">Le tue commissioni</div>
+    </div>
+    <div class="section-subtitle" id="codice-attivo" style="padding-left:30px"></div>
+    <div id="commissioni-list"></div>
   </div>
+
 </div>
 
 <!-- 2. ASSISTENZA -->
@@ -825,7 +844,7 @@ const ARREDATORI_SHEET = 'ARREDATORI';
 
 // Dati di esempio (usati finché non configuri il Google Sheet)
 const DEMO_COMMISSIONI = [
-  { id:'439/26', nome:'Mario', cognome:'Rossi', data_ordine:'22/03/2026', data_consegna:'30/04/2026', stato:'🟡 In lavorazione', arredatore:'Angela Cinquegrana', note:'Cucina Lube modello Clover' },
+  { codice:'9999Test', descrizione:'Cucina Lube modello Clover - basi rovere voyage, pensili cemento, top laminato grigio', data_ordine:'22/03/2026', data_consegna:'30/04/2026', stato:'In lavorazione', arredatore:'Angela Cinquegrana' },
   { id:'433/26', nome:'Caterina', cognome:'Auriemma', data_ordine:'21/03/2026', data_consegna:'26/04/2026', stato:'🔵 Consegna Pianificata', arredatore:'Angela Cinquegrana', note:'Soggiorno completo' },
   { id:'434/26', nome:'Erika', cognome:'Carbone', data_ordine:'21/03/2026', data_consegna:'30/05/2026', stato:'🔴 In attesa prodotto', arredatore:'Stefania Ciardulli', note:'In attesa conferma fornitore' },
   { id:'435/26', nome:'Giuseppe', cognome:'Ferraro', data_ordine:'20/03/2026', data_consegna:'15/04/2026', stato:'✅ Consegnato', arredatore:'Luigi Franzese', note:'Camera da letto completa' },
@@ -840,6 +859,48 @@ const DEMO_ARREDATORI = [
 ];
 
 let allCommissioni = [];
+let commissioniVisibili = []; // commissioni filtrate per codice attivo
+
+// ── LOGIN CODICE SITO ──
+function accediConCodice() {
+  const codice = document.getElementById('codice-input').value.trim();
+  if (!codice) return;
+
+  // Cerca nel dataset tutte le righe con quel codice (case-insensitive)
+  const trovate = allCommissioni.filter(c => {
+    const cod = (c.codice || c['Codice'] || '').toLowerCase();
+    return cod === codice.toLowerCase();
+  });
+
+  if (trovate.length === 0) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('login-error').style.display = 'none';
+  commissioniVisibili = trovate;
+
+  // Mostra i risultati
+  document.getElementById('login-box').style.display = 'none';
+  document.getElementById('risultati-box').style.display = 'block';
+  document.getElementById('codice-attivo').textContent = 'Codice: ' + codice + ' — ' + trovate.length + ' articoli';
+  renderCommissioni(commissioniVisibili);
+}
+
+function tornaLogin() {
+  document.getElementById('risultati-box').style.display = 'none';
+  document.getElementById('login-box').style.display = 'block';
+  document.getElementById('codice-input').value = '';
+  commissioniVisibili = [];
+}
+
+// Permette di premere Invio nel campo codice
+document.addEventListener('DOMContentLoaded', function() {
+  const inp = document.getElementById('codice-input');
+  if (inp) inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') accediConCodice();
+  });
+});
 
 // ── NAVIGAZIONE ──
 function showPage(id, btn) {
@@ -853,53 +914,54 @@ function showPage(id, btn) {
 // ── COMMISSIONI ──
 function getStatoClass(stato) {
   if (!stato) return '';
-  if (stato.includes('lavorazione')) return 'stato-lavorazione';
-  if (stato.includes('Pronto')) return 'stato-pronto';
-  if (stato.includes('Pianificata')) return 'stato-pianificata';
-  if (stato.includes('Consegnato')) return 'stato-consegnato';
-  if (stato.includes('attesa')) return 'stato-attesa';
+  const s = stato.toLowerCase();
+  if (s.includes('lavorazione')) return 'stato-lavorazione';
+  if (s.includes('pronto')) return 'stato-pronto';
+  if (s.includes('pianificata')) return 'stato-pianificata';
+  if (s.includes('consegnato')) return 'stato-consegnato';
+  if (s.includes('giacenza')) return 'stato-pianificata';
+  if (s.includes('ordinato')) return 'stato-lavorazione';
+  if (s.includes('attesa')) return 'stato-attesa';
   return '';
 }
 function getBadgeClass(stato) {
   if (!stato) return '';
-  if (stato.includes('lavorazione')) return 'badge-lavorazione';
-  if (stato.includes('Pronto')) return 'badge-pronto';
-  if (stato.includes('Pianificata')) return 'badge-pianificata';
-  if (stato.includes('Consegnato')) return 'badge-consegnato';
-  if (stato.includes('attesa')) return 'badge-attesa';
+  const s = stato.toLowerCase();
+  if (s.includes('lavorazione')) return 'badge-lavorazione';
+  if (s.includes('pronto')) return 'badge-pronto';
+  if (s.includes('pianificata')) return 'badge-pianificata';
+  if (s.includes('consegnato')) return 'badge-consegnato';
+  if (s.includes('giacenza')) return 'badge-pianificata';
+  if (s.includes('ordinato')) return 'badge-lavorazione';
+  if (s.includes('attesa')) return 'badge-attesa';
   return '';
 }
 
 function renderCommissioni(data) {
   const list = document.getElementById('commissioni-list');
   if (!data.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nessuna commissione trovata</div><div class="empty-text">Prova con un altro nome o numero</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">&#128237;</div><div class="empty-title">Nessuna commissione trovata</div><div class="empty-text">Prova con un altro codice</div></div>`;
     return;
   }
-  list.innerHTML = data.map((c,i) => `
-    <div class="comm-card ${getStatoClass(c.stato)}" onclick="openModal(${i})">
+  list.innerHTML = data.map((c,i) => {
+    const stato = c.stato || c['Status'] || c['Stato Ordine'] || '—';
+    const desc = c.descrizione || c['Descrizione'] || c.note || '—';
+    const dataConsegna = c.data_consegna || c['Data consegna'] || '';
+    const dataOrdine = c.data_ordine || c['Data commissione'] || '';
+    // Tronca la descrizione se troppo lunga
+    const descBreve = desc.length > 80 ? desc.substring(0, 80) + '…' : desc;
+    return `
+    <div class="comm-card ${getStatoClass(stato)}" onclick="openModal(${i})">
       <div class="comm-top">
-        <span class="comm-id">N° ${c.id || c['ID Commissione'] || c['Id commissione'] || '—'}</span>
-        <span class="stato-badge ${getBadgeClass(c.stato)}">${c.stato || '—'}</span>
+        <span class="comm-id">${dataOrdine ? '📅 ' + dataOrdine : ''}</span>
+        <span class="stato-badge ${getBadgeClass(stato)}">${stato}</span>
       </div>
-      <div class="comm-name">${c.nome || c['Nome Cliente'] || ''} ${c.cognome || c['Cognome Cliente'] || ''}</div>
-      <div class="comm-meta">
-        ${c.data_consegna || c['Data Prevista Consegna'] ? `<span>📅 Consegna: ${c.data_consegna || c['Data Prevista Consegna']}</span>` : ''}
-        ${c.arredatore || c['Arredatore'] ? `<span>👤 ${c.arredatore || c['Arredatore']}</span>` : ''}
+      <div class="comm-name" style="font-size:14px;font-weight:500;margin-top:4px">${descBreve}</div>
+      <div class="comm-meta" style="margin-top:6px">
+        ${dataConsegna ? `<span>🚚 Consegna: ${dataConsegna}</span>` : ''}
       </div>
-    </div>
-  `).join('');
-}
-
-function filterCommissioni() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const filtered = allCommissioni.filter(c => {
-    const nome = (c.nome || c['Nome Cliente'] || '').toLowerCase();
-    const cognome = (c.cognome || c['Cognome Cliente'] || '').toLowerCase();
-    const id = (c.id || c['ID Commissione'] || c['Id commissione'] || '').toLowerCase();
-    return nome.includes(q) || cognome.includes(q) || id.includes(q);
-  });
-  renderCommissioni(filtered);
+    </div>`;
+  }).join('');
 }
 
 function getSteps(stato) {
@@ -919,19 +981,19 @@ function getSteps(stato) {
 }
 
 function openModal(idx) {
-  const c = allCommissioni[idx];
-  const id = c.id || c['ID Commissione'] || c['Id commissione'] || '—';
-  const nome = `${c.nome || c['Nome Cliente'] || ''} ${c.cognome || c['Cognome Cliente'] || ''}`.trim();
-  const stato = c.stato || c['Stato Ordine'] || '—';
-  const dataOrdine = c.data_ordine || c['Data Ordine'] || '—';
-  const dataConsegna = c.data_consegna || c['Data Prevista Consegna'] || 'Da definire';
-  const arredatore = c.arredatore || c['Arredatore'] || '—';
-  const note = c.note || c['Note'] || '';
+  const c = commissioniVisibili[idx];
+  const id = c.codice || c['Codice'] || '—';
+  const nome = c.descrizione || c['Descrizione'] || '—';
+  const stato = c.stato || c['Status'] || c['Stato Ordine'] || '—';
+  const dataOrdine = c.data_ordine || c['Data commissione'] || '—';
+  const dataConsegna = c.data_consegna || c['Data consegna'] || 'Da definire';
+  const arredatore = c.arredatore || c['Arredatore'] || '';
+  const note = '';
   const { steps, activeIdx } = getSteps(stato);
 
   document.getElementById('modal-body').innerHTML = `
-    <div class="modal-title">${nome}</div>
-    <div class="modal-id">Commissione N° ${id}</div>
+    <div class="modal-title" style="font-size:16px;line-height:1.4">${nome}</div>
+    <div class="modal-id">Codice: ${id}</div>
     <div class="modal-row"><span class="modal-label">Stato</span><span class="modal-value"><span class="stato-badge ${getBadgeClass(stato)}">${stato}</span></span></div>
     <div class="modal-row"><span class="modal-label">Data ordine</span><span class="modal-value">${dataOrdine}</span></div>
     <div class="modal-row"><span class="modal-label">Consegna prevista</span><span class="modal-value">${dataConsegna}</span></div>
@@ -1006,7 +1068,7 @@ function inviaAssistenza() {
 // ── CARICAMENTO DATI ──
 function loadData() {
   allCommissioni = DEMO_COMMISSIONI;
-  renderCommissioni(allCommissioni);
+  // Non renderizziamo commissioni all'avvio — aspettiamo il codice sito
   renderArredatori(DEMO_ARREDATORI);
 
   /* CODICE PER GOOGLE SHEET REALE (decommenta quando pronto):
