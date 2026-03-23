@@ -579,7 +579,7 @@ body {
     <input class="search-input" id="search-input" type="text" placeholder="Cerca per nome o numero commissione…" oninput="filterCommissioni()">
   </div>
   <div id="commissioni-list">
-    <div class="loading"><div class="spinner"></div>Caricamento commissioni…</div>
+    <div class="loading"><div class="spinner"></div>Caricamento…</div>
   </div>
 </div>
 
@@ -1004,9 +1004,7 @@ function inviaAssistenza() {
 }
 
 // ── CARICAMENTO DATI ──
-async function loadData() {
-  // Usa i dati demo — quando avrai configurato il Google Sheet pubblico,
-  // sostituisci SHEET_ID sopra e decommenta il codice qui sotto
+function loadData() {
   allCommissioni = DEMO_COMMISSIONI;
   renderCommissioni(allCommissioni);
   renderArredatori(DEMO_ARREDATORI);
